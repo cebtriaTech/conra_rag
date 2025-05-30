@@ -1,40 +1,20 @@
-import os
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
-from langchain_community.vectorstores import Qdrant
-from langchain_community.embeddings import OpenAIEmbeddings
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams
+import os
 
-# Load environment variables
 load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+embedder = OpenAIEmbeddings(openai_api_key=api_key)
 
-QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
-QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "centria_docs")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+VECTOR_STORE_DIR = "vector_store"
 
-if not OPENAI_API_KEY:
-    raise ValueError("Missing OPENAI_API_KEY in environment variables.")
-
-# Embeddings using OpenAI's text-embedding-3-small
-embedder = OpenAIEmbeddings(
-    model="text-embedding-3-small",
-    openai_api_key=OPENAI_API_KEY
-)
-
-# Connect to local or cloud Qdrant
-client = QdrantClient(
-    url=QDRANT_URL,
-)
-
-# Ensure collection exists (optional if already created)
-client.recreate_collection(
-    collection_name=QDRANT_COLLECTION,
-    vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
-)
-
-# Bind collection with LangChain wrapper
-vector_store = Qdrant(
-    client=client,
-    collection_name=QDRANT_COLLECTION,
-    embeddings=embedder
-)
+# Only load if there’s a saved index directory
+if os.path.isdir(VECTOR_STORE_DIR):
+    vector_store = FAISS.load_local(
+        VECTOR_STORE_DIR,
+        embedder,
+        allow_dangerous_deserialization=True
+    )
+else:
+    vector_store = None

@@ -7,7 +7,7 @@ load_dotenv()
 
 # Import after loading env to ensure API key is available
 from app.documents import add_document
-from app.ask import services.rag_question
+from app.services.rag_question import rag_question
 
 # Initialize FastAPI app
 app = FastAPI()
