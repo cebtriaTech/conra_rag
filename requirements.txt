@@ -5,4 +5,4 @@ langchain
 langchain-openai
 python-dotenv
 qdrant-client
-pydantic
+pydanticlangchain-community 
